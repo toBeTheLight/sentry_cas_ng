@@ -41,7 +41,7 @@ class CASMiddleware(MiddlewareMixin):
         logger.warn('1--------------------------------')
         # 已经登录则放过
         # cas 时进入 cas 登录逻辑
-        if settings.CAS_LOGIN_REG and e.match(settings.CAS_LOGIN_REG, request.path):
+        if settings.CAS_LOGIN_REG and re.match(settings.CAS_LOGIN_REG, request.path):
             logger.warn('2--------------------------------')
             logger.warn(request.user)
             logger.warn(request.user.is_authenticated)
@@ -90,7 +90,7 @@ class CASMiddleware(MiddlewareMixin):
                     return HttpResponseRedirect(client.get_login_url())
             else:
                 return HttpResponseRedirect(client.get_login_url())
-        elif if settings.CAS_LOGOUT_REG and e.match(settings.CAS_LOGOUT_REG, request.path)::
+        elif settings.CAS_LOGOUT_REG and re.match(settings.CAS_LOGOUT_REG, request.path):
             try:
                 st = SessionTicket.objects.get(session_key=request.session.session_key)
                 ticket = st.ticket
@@ -107,6 +107,7 @@ class CASMiddleware(MiddlewareMixin):
             # clean current session ProxyGrantingTicket and SessionTicket
             ProxyGrantingTicket.objects.filter(session_key=request.session.session_key).delete()
             SessionTicket.objects.filter(session_key=request.session.session_key).delete()
+            pass
         else:
             pass
         """Checks that the authentication middleware is installed"""
