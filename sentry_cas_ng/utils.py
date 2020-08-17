@@ -11,7 +11,9 @@ from django.contrib.auth import (
 from django.contrib.auth.models import AnonymousUser
 from django.shortcuts import resolve_url
 from django.utils.six.moves import urllib_parse
-
+import logging
+logging.basicConfig()
+logger = logging.getLogger('cas-sentry-ng: utils')
 
 def get_protocol(request):
     """Returns 'http' or 'https' for the request protocol"""
@@ -96,8 +98,14 @@ def get_cas_client(service_url=None, request=None):
 def get_user_from_session(session):
     try:
         user_id = session[SESSION_KEY]
+        logger.warn('!!!!!!!!!!!!!!!!!!!!!!!')
+        logger.warn(user_id)
         backend_path = session[BACKEND_SESSION_KEY]
+        logger.warn('!!!!!!!!!!!!!!!!!!!!!!!')
+        logger.warn(backend_path)
+        logger.warn('!!!!!!!!!!!!!!!!!!!!!!!')
         backend = load_backend(backend_path)
+        logger.warn(backend_path)
         return backend.get_user(user_id) or AnonymousUser()
     except KeyError:
         return AnonymousUser()

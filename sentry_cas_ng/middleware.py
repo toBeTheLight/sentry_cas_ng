@@ -34,11 +34,17 @@ class CASMiddleware(MiddlewareMixin):
         return HttpResponseRedirect('/admin/')
 
     def process_request(self, request):
-        logger.warn('----------------------')
+        logger.warn('1--------------------------------')
         logger.warn(request.path)
+        logger.warn(settings.CAS_LOGIN_REG)
+        logger.warn('1--------------------------------')
         # 已经登录则放过
         # cas 时进入 cas 登录逻辑
         if settings.CAS_LOGIN_REG and e.match(settings.CAS_LOGIN_REG, request.path):
+            logger.warn('2--------------------------------')
+            logger.warn(request.user)
+            logger.warn(request.user.is_authenticated)
+            logger.warn('2--------------------------------')
             if request.user.is_authenticated:
                 logger.warn(request.user.is_authenticated)
                 return self.cas_successful_login()
