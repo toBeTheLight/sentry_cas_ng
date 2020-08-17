@@ -113,7 +113,7 @@ class CASBackend(ModelBackend):
                 from sentry.models import (UserEmail)
             except ImportError:
                 pass
-            elif:
+            else:
                 if user.email is not None:
                     email = user.email
                 elif not hasattr(settings, 'AUTH_CAS_DEFAULT_EMAIL_DOMAIN'):
