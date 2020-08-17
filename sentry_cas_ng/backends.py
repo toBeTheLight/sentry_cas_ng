@@ -30,7 +30,6 @@ class CASBackend(ModelBackend):
         casApplyAttributesToUser = getattr(settings, 'CAS_APPLY_ATTRIBUTES_TO_USER', False)
         authCasDefaultEmailDomain = getattr(settings, 'AUTH_CAS_DEFAULT_EMAIL_DOMAIN', None)
         authCasDefaultSentryOrganization = getattr(settings, 'AUTH_CAS_DEFAULT_SENTRY_ORGANIZATION', False)
-        AUTH_CAS_DEFAULT_EMAIL_DOMAIN
         client = get_cas_client(service_url=service, request=request)
         username, attributes, pgtiou = client.verify_ticket(ticket)
 
