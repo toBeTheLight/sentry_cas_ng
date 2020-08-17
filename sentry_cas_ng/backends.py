@@ -105,7 +105,7 @@ class CASBackend(ModelBackend):
                 pass
             else:
                 if user.email is not None:
-                    email = user.attrs.get('mail')[0]
+                    email = user.email
                 elif not hasattr(settings, 'AUTH_CAS_DEFAULT_EMAIL_DOMAIN'):
                     email = ''
                 else:
