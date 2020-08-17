@@ -64,7 +64,7 @@ class ProxyGrantingTicket(models.Model):
 
 
 class SessionTicket(models.Model):
-    session_key = models.CharField(max_length=255)
+    session_key = models.CharField(max_length=500)
     ticket = models.CharField(max_length=255)
 
     @classmethod
