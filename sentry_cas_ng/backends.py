@@ -24,7 +24,7 @@ class CASBackend(ModelBackend):
     def authenticate(self, request, ticket, service):
         """Verifies CAS ticket and gets or creates User object"""
         casCreateUser = getattr(settings, 'CAS_CREATE_USER', True)
-        casCreateUserWithID = getattr(settings, 'CAS_CREATE_USER_WITH_ID', false)
+        casCreateUserWithID = getattr(settings, 'CAS_CREATE_USER_WITH_ID', False)
         casRenameAttributes = getattr(settings, 'CAS_RENAME_ATTRIBUTES', {})
         casProxyCallback = getattr(settings, 'CAS_PROXY_CALLBACK', None)
         casApplyAttributesToUser = getattr(settings, 'CAS_APPLY_ATTRIBUTES_TO_USER', False)
