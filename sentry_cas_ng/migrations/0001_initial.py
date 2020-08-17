@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
             name='ProxyGrantingTicket',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('session_key', models.CharField(blank=True, max_length=255, null=True)),
+                ('session_key', models.CharField(blank=True, max_length=500, null=True)),
                 ('pgtiou', models.CharField(blank=True, max_length=255, null=True)),
                 ('pgt', models.CharField(blank=True, max_length=255, null=True)),
                 ('date', models.DateTimeField(auto_now_add=True)),
@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
             name='SessionTicket',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('session_key', models.CharField(max_length=255)),
+                ('session_key', models.CharField(max_length=500)),
                 ('ticket', models.CharField(max_length=255)),
             ],
         ),
