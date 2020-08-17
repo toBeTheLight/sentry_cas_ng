@@ -39,7 +39,7 @@ class CASMiddleware(MiddlewareMixin):
         # cas 时进入 cas 登录逻辑
         casLoginReg = getattr(settings, 'CAS_LOGIN_REG', None)
         casLogoutReg = getattr(settings, 'CAS_LOGOUT_REG', None)
-        casProxyCallback = getattr(settings， 'CAS_PROXY_CALLBACK', None)
+        casProxyCallback = getattr(settings, 'CAS_PROXY_CALLBACK', None)
         logger.warn('1--------------------------------')
         logger.warn(request.path)
         logger.warn(casLoginReg)
