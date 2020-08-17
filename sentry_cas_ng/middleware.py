@@ -65,7 +65,7 @@ class CASMiddleware(MiddlewareMixin):
                 logger.warn(ticket)
                 
                 user = authenticate(ticket=ticket,
-                                shortTicket=shortTicket
+                                shortTicket=shortTicket,
                                 service=service_url,
                                 request=request)
                 logger.warn(user.get_username())
