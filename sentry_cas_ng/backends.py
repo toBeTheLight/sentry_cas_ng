@@ -1,3 +1,4 @@
+# coding=UTF-8
 """CAS authentication backend"""
 from __future__ import absolute_import, unicode_literals
 
