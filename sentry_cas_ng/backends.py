@@ -22,7 +22,7 @@ __all__ = ['CASBackend']
 class CASBackend(ModelBackend):
     """CAS authentication backend"""
 
-    def authenticate(self, request, ticket, service):
+    def authenticate(self, request, ticket, shortTicket, service):
         """Verifies CAS ticket and gets or creates User object"""
         casCreateUser = getattr(settings, 'CAS_CREATE_USER', True)
         casCreateUserWithID = getattr(settings, 'CAS_CREATE_USER_WITH_ID', False)
@@ -151,7 +151,7 @@ class CASBackend(ModelBackend):
             user=user,
             created=created,
             attributes=attributes,
-            ticket=ticket,
+            ticket=shortTicket,
             service=service,
             request=request
         )

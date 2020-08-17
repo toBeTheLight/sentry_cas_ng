@@ -55,12 +55,17 @@ class CASMiddleware(MiddlewareMixin):
             service_url = get_service_url(request, request.GET.get('next'))
             client = get_cas_client(service_url=service_url, request=request)
             ticket = request.GET.get('ticket')
+            shortTicket = ''
+            if ticket:
+                shortTicket = ticket[0:30]
             logger.warn('ticket')
             # ticket 验证阶段
             if ticket:
                 pgtiou = request.session.get("pgtiou")
                 logger.warn(ticket)
+                
                 user = authenticate(ticket=ticket,
+                                shortTicket=shortTicket
                                 service=service_url,
                                 request=request)
                 logger.warn(user.get_username())
@@ -69,9 +74,12 @@ class CASMiddleware(MiddlewareMixin):
                     if not request.session.exists(request.session.session_key):
                         request.session.create()
                     auth_login(request, user)
+                    logger.warn('0----------------login success')
+                    logger.warn(request.session.session_key)
+                    logger.warn(ticket)
                     SessionTicket.objects.create(
                         session_key=request.session.session_key,
-                        ticket=ticket
+                        ticket=shortTicket
                     )
 
                     if pgtiou and casProxyCallback:
@@ -88,7 +96,7 @@ class CASMiddleware(MiddlewareMixin):
                             pgt.save()
                         except ProxyGrantingTicket.DoesNotExist:
                             pass
-                    return HttpResponseRedirect('/admin/')
+                    return HttpResponseRedirect('/')
                 else:
                     return HttpResponseRedirect(client.get_login_url())
             else:
@@ -104,7 +112,7 @@ class CASMiddleware(MiddlewareMixin):
                 sender="manual",
                 user=request.user,
                 session=request.session,
-                ticket=ticket,
+                ticket=shortTicket,
             )
             auth_logout(request)
             # clean current session ProxyGrantingTicket and SessionTicket
