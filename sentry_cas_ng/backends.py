@@ -23,8 +23,17 @@ class CASBackend(ModelBackend):
 
     def authenticate(self, request, ticket, service):
         """Verifies CAS ticket and gets or creates User object"""
+        casCreateUser = getattr(settings, 'CAS_CREATE_USER', True)
+        casCreateUserWithID = getattr(settings, 'CAS_CREATE_USER_WITH_ID', false)
+        casRenameAttributes = getattr(settings, 'CAS_RENAME_ATTRIBUTES', {})
+        casProxyCallback = getattr(settings, 'CAS_PROXY_CALLBACK', None)
+        casApplyAttributesToUser = getattr(settings, 'CAS_APPLY_ATTRIBUTES_TO_USER', False)
+        authCasDefaultEmailDomain = getattr(settings, 'AUTH_CAS_DEFAULT_EMAIL_DOMAIN', None)
+        authCasDefaultSentryOrganization = getattr(settings, 'AUTH_CAS_DEFAULT_SENTRY_ORGANIZATION', False)
+        AUTH_CAS_DEFAULT_EMAIL_DOMAIN
         client = get_cas_client(service_url=service, request=request)
         username, attributes, pgtiou = client.verify_ticket(ticket)
+
         if attributes and request:
             request.session['attributes'] = attributes
 
@@ -40,7 +49,7 @@ class CASBackend(ModelBackend):
 
             # If we can, we rename the attributes as described in the settings file
             # Existing attributes will be overwritten
-            for cas_attr_name, req_attr_name in settings.CAS_RENAME_ATTRIBUTES.items():
+            for cas_attr_name, req_attr_name in casRenameAttributes.items():
                 if cas_attr_name in attributes and cas_attr_name is not req_attr_name:
                     attributes[req_attr_name] = attributes[cas_attr_name]
                     attributes.pop(cas_attr_name)
@@ -50,11 +59,11 @@ class CASBackend(ModelBackend):
         # Note that this could be accomplished in one try-except clause, but
         # instead we use get_or_create when creating unknown users since it has
         # built-in safeguards for multiple threads.
-        if settings.CAS_CREATE_USER:
+        if casCreateUser:
             user_kwargs = {
                 UserModel.USERNAME_FIELD: username
             }
-            if settings.CAS_CREATE_USER_WITH_ID:
+            if casCreateUserWithID:
                 user_kwargs['id'] = self.get_user_id(attributes)
 
             user, created = UserModel._default_manager.get_or_create(**user_kwargs)
@@ -70,10 +79,10 @@ class CASBackend(ModelBackend):
         if not self.user_can_authenticate(user):
             return None
 
-        if pgtiou and settings.CAS_PROXY_CALLBACK and request:
+        if pgtiou and casProxyCallback and request:
             request.session['pgtiou'] = pgtiou
 
-        if settings.CAS_APPLY_ATTRIBUTES_TO_USER and attributes:
+        if casApplyAttributesToUser and attributes:
             # If we are receiving None for any values which cannot be NULL
             # in the User model, set them to an empty string instead.
             # Possibly it would be desirable to let these throw an error
@@ -104,23 +113,23 @@ class CASBackend(ModelBackend):
                 from sentry.models import (UserEmail)
             except ImportError:
                 pass
-            else:
+            elif:
                 if user.email is not None:
                     email = user.email
                 elif not hasattr(settings, 'AUTH_CAS_DEFAULT_EMAIL_DOMAIN'):
                     email = ''
-                else:
-                    email = username + '@' + settings.AUTH_CAS_DEFAULT_EMAIL_DOMAIN
+                elif authCasDefaultEmailDomain is not None:
+                    email = username + '@' + authCasDefaultEmailDomain
 
                 # django-auth-ldap may have accidentally created an empty email address
                 UserEmail.objects.filter(Q(email='') | Q(email=' '), user=user).delete()
                 if email:
                     UserEmail.objects.get_or_create(user=user, email=email)
             # 组织与角色权限
-            if settings.AUTH_CAS_DEFAULT_SENTRY_ORGANIZATION:
+            if authCasDefaultSentryOrganization:
                 orgs = OrganizationMember.objects.filter(user=user)
                 if orgs is None or len(orgs) == 0:
-                    organizations = Organization.objects.filter(name=settings.AUTH_CAS_DEFAULT_SENTRY_ORGANIZATION)
+                    organizations = Organization.objects.filter(name=authCasDefaultSentryOrganization)
                     member_role = getattr(settings, 'AUTH_CAS_SENTRY_ORGANIZATION_ROLE_TYPE', None)
                     has_global_access = getattr(settings, 'AUTH_CAS_SENTRY_ORGANIZATION_GLOBAL_ACCESS', False)
                     OrganizationMember.objects.create(
@@ -133,7 +142,7 @@ class CASBackend(ModelBackend):
             # If we are keeping a local copy of the user model we
             # should save these attributes which have a corresponding
             # instance in the DB.
-            if settings.CAS_CREATE_USER:
+            if casCreateUser:
                 user.save()
 
         # send the `cas_user_authenticated` signal
@@ -180,16 +189,16 @@ class CASBackend(ModelBackend):
         create the user object.  Returns the cleaned username.
 
         By default, changes the username case according to
-        `settings.CAS_FORCE_CHANGE_USERNAME_CASE`.
+        `settings.CAS_FORCE_CHANGE_casForceChangeUsernameCase`.
         """
-        username_case = settings.CAS_FORCE_CHANGE_USERNAME_CASE
-        if username_case == 'lower':
+        casForceChangeUsernameCase = getattr(settings, 'CAS_FORCE_CHANGE_USERNAME_CASE', None)
+        if casForceChangeUsernameCase == 'lower':
             username = username.lower()
-        elif username_case == 'upper':
+        elif casForceChangeUsernameCase == 'upper':
             username = username.upper()
-        elif username_case is not None:
+        elif casForceChangeUsernameCase is not None:
             raise ImproperlyConfigured(
-                "Invalid value for the CAS_FORCE_CHANGE_USERNAME_CASE setting. "
+                "Invalid value for the CAS_FORCE_CHANGE_casForceChangeUsernameCase setting. "
                 "Valid values are `'lower'`, `'upper'`, and `None`.")
         return username
 

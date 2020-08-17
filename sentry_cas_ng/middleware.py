@@ -35,13 +35,16 @@ class CASMiddleware(MiddlewareMixin):
         return HttpResponseRedirect('/admin/')
 
     def process_request(self, request):
-        logger.warn('1--------------------------------')
-        logger.warn(request.path)
-        logger.warn(settings.CAS_LOGIN_REG)
-        logger.warn('1--------------------------------')
         # 已经登录则放过
         # cas 时进入 cas 登录逻辑
-        if settings.CAS_LOGIN_REG and re.match(settings.CAS_LOGIN_REG, request.path):
+        casLoginReg = getattr(settings, 'CAS_LOGIN_REG', None)
+        casLogoutReg = getattr(settings, 'CAS_LOGOUT_REG', None)
+        casProxyCallback = getattr(settings， 'CAS_PROXY_CALLBACK', None)
+        logger.warn('1--------------------------------')
+        logger.warn(request.path)
+        logger.warn(casLoginReg)
+        logger.warn('1--------------------------------')
+        if casLoginReg is not None and re.match(casLoginReg, request.path):
             logger.warn('2--------------------------------')
             logger.warn(request.user)
             logger.warn(request.user.is_authenticated)
@@ -71,7 +74,7 @@ class CASMiddleware(MiddlewareMixin):
                         ticket=ticket
                     )
 
-                    if pgtiou and settings.CAS_PROXY_CALLBACK:
+                    if pgtiou and casProxyCallback:
                         # Delete old PGT
                         ProxyGrantingTicket.objects.filter(
                             user=user,
@@ -90,7 +93,7 @@ class CASMiddleware(MiddlewareMixin):
                     return HttpResponseRedirect(client.get_login_url())
             else:
                 return HttpResponseRedirect(client.get_login_url())
-        elif settings.CAS_LOGOUT_REG and re.match(settings.CAS_LOGOUT_REG, request.path):
+        elif casLogoutReg is not None and re.match(casLogoutReg, request.path):
             try:
                 st = SessionTicket.objects.get(session_key=request.session.session_key)
                 ticket = st.ticket
