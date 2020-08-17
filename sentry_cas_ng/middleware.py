@@ -21,6 +21,7 @@ from .utils import (
 )
 from .signals import cas_user_logout
 from .models import ProxyGrantingTicket, SessionTicket
+import re
 import logging
 logging.basicConfig()
 logger = logging.getLogger('sentry-cas')
@@ -37,7 +38,7 @@ class CASMiddleware(MiddlewareMixin):
         logger.warn(request.path)
         # 已经登录则放过
         # cas 时进入 cas 登录逻辑
-        if request.path.endswith('/cas/'):
+        if settings.CAS_LOGIN_REG and e.match(settings.CAS_LOGIN_REG, request.path):
             if request.user.is_authenticated:
                 logger.warn(request.user.is_authenticated)
                 return self.cas_successful_login()
@@ -82,7 +83,7 @@ class CASMiddleware(MiddlewareMixin):
                     return HttpResponseRedirect(client.get_login_url())
             else:
                 return HttpResponseRedirect(client.get_login_url())
-        # elif request.path.endswith('/logout/'):
+        elif if settings.CAS_LOGOUT_REG and e.match(settings.CAS_LOGOUT_REG, request.path)::
             try:
                 st = SessionTicket.objects.get(session_key=request.session.session_key)
                 ticket = st.ticket

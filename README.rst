@@ -80,7 +80,10 @@ Set the following required setting in ``settings.py``:
    Set it to the base URL of your CAS source (e.g. https://account.example.com/cas/).
 
 Optional settings include:
-
+* ``CAS_LOGIN_REG``: urlPattern of login
+* ``CAS_LOGOUT_REG``: urlPattern of logout
+* ``AUTH_CAS_DEFAULT_SENTRY_ORGANIZATION``: Auto adds created user to the specified organization (matched by name) if it exists
+* ``AUTH_CAS_SENTRY_ORGANIZATION_ROLE_TYPE``: Role type auto-added users are assigned.
 * ``CAS_ADMIN_PREFIX``: The URL prefix of the Django administration site.
   If undefined, the CAS middleware will check the view being rendered to
   see if it lives in ``django.contrib.admin.views``.

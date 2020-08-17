@@ -116,19 +116,19 @@ class CASBackend(ModelBackend):
                 if email:
                     UserEmail.objects.get_or_create(user=user, email=email)
             # 组织与角色权限
-            # if settings.AUTH_LDAP_DEFAULT_SENTRY_ORGANIZATION:
-            #     orgs = OrganizationMember.objects.filter(user=user)
-            #     if orgs is None or len(orgs) == 0:
-            #         organizations = Organization.objects.filter(name=settings.AUTH_LDAP_DEFAULT_SENTRY_ORGANIZATION)
-            #         member_role = getattr(settings, 'AUTH_LDAP_SENTRY_ORGANIZATION_ROLE_TYPE', None)
-            #         has_global_access = getattr(settings, 'AUTH_LDAP_SENTRY_ORGANIZATION_GLOBAL_ACCESS', False)
-            #         OrganizationMember.objects.create(
-            #             organization=organizations[0],
-            #             user=user,
-            #             role=member_role,
-            #             has_global_access=has_global_access,
-            #             flags=getattr(OrganizationMember.flags, 'sso:linked'),
-            #         )
+            if settings.AUTH_CAS_DEFAULT_SENTRY_ORGANIZATION:
+                orgs = OrganizationMember.objects.filter(user=user)
+                if orgs is None or len(orgs) == 0:
+                    organizations = Organization.objects.filter(name=settings.AUTH_CAS_DEFAULT_SENTRY_ORGANIZATION)
+                    member_role = getattr(settings, 'AUTH_CAS_SENTRY_ORGANIZATION_ROLE_TYPE', None)
+                    has_global_access = getattr(settings, 'AUTH_CAS_SENTRY_ORGANIZATION_GLOBAL_ACCESS', False)
+                    OrganizationMember.objects.create(
+                        organization=organizations[0],
+                        user=user,
+                        role=member_role,
+                        has_global_access=has_global_access,
+                        flags=getattr(OrganizationMember.flags, 'sso:linked'),
+                    )
             # If we are keeping a local copy of the user model we
             # should save these attributes which have a corresponding
             # instance in the DB.
