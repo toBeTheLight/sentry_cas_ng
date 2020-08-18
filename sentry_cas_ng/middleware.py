@@ -34,7 +34,8 @@ __all__ = ['CASMiddleware']
 def user_logout(sender, request, user, **kwargs):
     logger.warn('----------logout----------')
     try:
-        st = SessionTicket.objects.get(session_key=request.session.session_key)
+        sts = SessionTicket.objects.filter(session_key=request.session.session_key)
+        st = sts[0]
         ticket = st.ticket[0:30]
     except SessionTicket.DoesNotExist:
         ticket = None
