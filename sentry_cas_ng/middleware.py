@@ -74,7 +74,7 @@ class CASMiddleware(MiddlewareMixin):
             shortTicket = ''
             historyTickets = SessionTicket.objects.filter(session_key=request.session.session_key)
             # 如果没有 ticket 那么曾主动退出登录或登录已经过期，跳转至 sso 重新登录
-            if len(historyTickets) == 0
+            if len(historyTickets) == 0:
                 protocol = get_protocol(request)
                 host = request.get_host()
                 redirect_url = urllib_parse.urlunparse(
