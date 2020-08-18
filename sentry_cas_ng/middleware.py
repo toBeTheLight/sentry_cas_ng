@@ -69,9 +69,8 @@ class CASMiddleware(MiddlewareMixin):
             logger.warn('=============login logic===============')
             protocol = get_protocol(request)
             host = request.get_host()
-            port = request.get_port()
             casLoginReturnUrl = urllib_parse.urlunparse(
-                (protocol, host + ':' + port, request.path, '', '', ''),
+                (protocol, host, request.path, '', '', ''),
             )
             logger.warn('============= casLoginReturnUrl ===============')
             if request.user.is_authenticated:
