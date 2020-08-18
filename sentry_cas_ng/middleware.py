@@ -74,16 +74,11 @@ class CASMiddleware(MiddlewareMixin):
         casLogoutRequestJudge = getattr(settings, 'CAS_LOGOUT_REQUEST_JUDGE', None)
         casProxyCallback = getattr(settings, 'CAS_PROXY_CALLBACK', None)
         logger.warn('1--------------------------------')
-        logger.warn(request.path)
-        logger.warn(getattr(request.user, 'session_nonce', ''))
-        logger.warn(request.session.get("_nonce", ""))
+        logger.warn(casLoginRequestJudge)
+        logger.warn(casLogoutRequestJudge)
         logger.warn('1--------------------------------')
-        
+
         if casLoginRequestJudge is not None and casLoginRequestJudge(request):
-            logger.warn('2--------------------------------')
-            logger.warn(request.user)
-            logger.warn(request.user.is_authenticated)
-            logger.warn('2--------------------------------')
             if request.user.is_authenticated:
                 logger.warn(request.user.is_authenticated)
                 return self.cas_successful_login(user=request.user, request=request)
