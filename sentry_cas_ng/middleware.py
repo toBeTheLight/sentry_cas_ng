@@ -57,15 +57,6 @@ class CASMiddleware(MiddlewareMixin):
         # clean current session ProxyGrantingTicket and SessionTicket
         ProxyGrantingTicket.objects.filter(session_key=request.session.session_key).delete()
         SessionTicket.objects.filter(session_key=request.session.session_key).delete()
-        if st:
-            protocol = get_protocol(request)
-            host = request.get_host()
-            redirect_url = urllib_parse.urlunparse(
-                (protocol, host, '', '', '', ''),
-            )
-            client = get_cas_client(request=request)
-            return client.get_logout_url(redirect_url)
-        return False
 
     def process_request(self, request):
         # 已经登录则放过
@@ -132,9 +123,7 @@ class CASMiddleware(MiddlewareMixin):
             else:
                 return HttpResponseRedirect(client.get_login_url())
         elif casLogoutRequestJudge is not None and casLogoutRequestJudge(request):
-            casLogoutUrl = self.cas_success_logout(request=request)
-            if casLogoutUrl:
-                return HttpResponseRedirect(casLogoutUrl)
+            self.cas_success_logout(request=request)
             pass
             # try:
             #     st = SessionTicket.objects.get(session_key=request.session.session_key)
