@@ -9,6 +9,7 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.signals import user_logged_out
+from django.dispatch import receiver
 from sentry_cas_ng.signals import cas_user_logout
 from django.urls import reverse
 from django.utils.deprecation import MiddlewareMixin
