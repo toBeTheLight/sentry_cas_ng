@@ -50,6 +50,7 @@ class CASBackend(ModelBackend):
         username = self.clean_username(username)
 
         if attributes:
+            logger.warn('---------attributes---------')
             reject = self.bad_attributes_reject(request, username, attributes)
             if reject:
                 return None
@@ -74,6 +75,10 @@ class CASBackend(ModelBackend):
                 user_kwargs['id'] = self.get_user_id(attributes)
 
             user, created = UserModel._default_manager.get_or_create(**user_kwargs)
+            logger.warn('---------casCreateUser---------')
+            logger.warn(created)
+            logger.warn(user)
+
             if created:
                 user = self.configure_user(user)
         else:
