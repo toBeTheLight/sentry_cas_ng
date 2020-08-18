@@ -28,9 +28,6 @@ logging.basicConfig()
 logger = logging.getLogger('sentry-cas')
 __all__ = ['CASMiddleware']
 
-
-user_logged_out.connect(casLogout)
-
 class CASMiddleware(MiddlewareMixin):
     """Middleware that allows CAS authentication on admin pages"""
     def cas_successful_login(self):
