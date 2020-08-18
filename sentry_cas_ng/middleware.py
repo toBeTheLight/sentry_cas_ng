@@ -12,6 +12,7 @@ from django.urls import reverse
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.six.moves import urllib_parse
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.auth.signals import user_logged_out
 
 from .utils import (
     get_cas_client,
@@ -28,11 +29,18 @@ logging.basicConfig()
 logger = logging.getLogger('sentry-cas')
 __all__ = ['CASMiddleware']
 
+def casLogout (sender, user, request, **kwargs) {
+    logger.warn('--------------logout------------')
+    logger.warn(request.session.session_key)
+}
+
+user_logged_out.connect(casLogout)
 
 class CASMiddleware(MiddlewareMixin):
     """Middleware that allows CAS authentication on admin pages"""
     def cas_successful_login(self):
-        return HttpResponseRedirect('/admin/')
+        casLoginSuccessPath = getattr(settings, 'CAS_LOGIN_SUCCESS_PATH', '/')
+        return HttpResponseRedirect(casLoginSuccessPath)
 
     def process_request(self, request):
         # 已经登录则放过
@@ -42,7 +50,6 @@ class CASMiddleware(MiddlewareMixin):
         casProxyCallback = getattr(settings, 'CAS_PROXY_CALLBACK', None)
         logger.warn('1--------------------------------')
         logger.warn(request.path)
-        logger.warn(casLoginReg)
         logger.warn('1--------------------------------')
         if casLoginReg is not None and re.match(casLoginReg, request.path):
             logger.warn('2--------------------------------')
@@ -96,7 +103,7 @@ class CASMiddleware(MiddlewareMixin):
                             pgt.save()
                         except ProxyGrantingTicket.DoesNotExist:
                             pass
-                    return HttpResponseRedirect('/')
+                    return self.cas_successful_login()
                 else:
                     return HttpResponseRedirect(client.get_login_url())
             else:
