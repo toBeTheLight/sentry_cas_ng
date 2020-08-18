@@ -30,7 +30,9 @@ __all__ = ['CASMiddleware']
 
 class CASMiddleware(MiddlewareMixin):
     """Middleware that allows CAS authentication on admin pages"""
-    def cas_successful_login(self):
+    def cas_successful_login(self, user, request):
+        if user.session_nonce is not None:
+            request.session["_nonce"] = user.session_nonce
         casLoginSuccessPath = getattr(settings, 'CAS_LOGIN_SUCCESS_PATH', '/')
         return HttpResponseRedirect(casLoginSuccessPath)
 
@@ -53,7 +55,7 @@ class CASMiddleware(MiddlewareMixin):
             logger.warn('2--------------------------------')
             if request.user.is_authenticated:
                 logger.warn(request.user.is_authenticated)
-                return self.cas_successful_login()
+                return self.cas_successful_login(user=request.user, request=request)
             service_url = get_service_url(request, request.GET.get('next'))
             client = get_cas_client(service_url=service_url, request=request)
             ticket = request.GET.get('ticket')
@@ -72,6 +74,7 @@ class CASMiddleware(MiddlewareMixin):
                                 request=request)
                 # 如果登录成功
                 if user is not None:
+                    # If this User has a nonce value, we need to bind into the session.
                     logger.warn(user.get_username())
                     logger.warn('------------user.session_nonce------------')
                     logger.warn(user.session_nonce)
@@ -102,7 +105,7 @@ class CASMiddleware(MiddlewareMixin):
                             pgt.save()
                         except ProxyGrantingTicket.DoesNotExist:
                             pass
-                    return self.cas_successful_login()
+                    return self.cas_successful_login(user=user, request=request)
                 else:
                     return HttpResponseRedirect(client.get_login_url())
             else:
