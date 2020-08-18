@@ -21,7 +21,6 @@ from .utils import (
     get_service_url,
     get_user_from_session,
 )
-from .signals import cas_user_logout
 from .models import ProxyGrantingTicket, SessionTicket
 import re
 import logging
@@ -29,10 +28,6 @@ logging.basicConfig()
 logger = logging.getLogger('sentry-cas')
 __all__ = ['CASMiddleware']
 
-def casLogout (sender, user, request, **kwargs) {
-    logger.warn('--------------logout------------')
-    logger.warn(request.session.session_key)
-}
 
 user_logged_out.connect(casLogout)
 
@@ -75,9 +70,13 @@ class CASMiddleware(MiddlewareMixin):
                                 shortTicket=shortTicket,
                                 service=service_url,
                                 request=request)
-                logger.warn(user.get_username())
                 # 如果登录成功
                 if user is not None:
+                    logger.warn(user.get_username())
+                    logger.warn('------------user.session_nonce------------')
+                    logger.warn(user.session_nonce)
+                    logger.warn('-----------request.session.get------------')
+                    logger.warn(request.session.get("_nonce", ""))
                     if not request.session.exists(request.session.session_key):
                         request.session.create()
                     auth_login(request, user)

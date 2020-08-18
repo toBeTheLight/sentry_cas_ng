@@ -16,6 +16,10 @@ from sentry.models import (
 
 from .utils import get_cas_client
 
+import logging
+logging.basicConfig()
+logger = logging.getLogger('sentry-cas-backends')
+
 __all__ = ['CASBackend']
 
 
@@ -34,7 +38,9 @@ class CASBackend(ModelBackend):
 
         client = get_cas_client(service_url=service, request=request)
         username, attributes, pgtiou = client.verify_ticket(ticket)
-
+        logger.warn('------------------------')
+        logger.warn(username)
+        logger.warn('------------------------')
         if attributes and request:
             request.session['attributes'] = attributes
 
