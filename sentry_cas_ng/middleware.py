@@ -73,24 +73,24 @@ class CASMiddleware(MiddlewareMixin):
         casLoginRequestJudge = getattr(settings, 'CAS_LOGIN_REQUEST_JUDGE', None)
         casLogoutRequestJudge = getattr(settings, 'CAS_LOGOUT_REQUEST_JUDGE', None)
         casProxyCallback = getattr(settings, 'CAS_PROXY_CALLBACK', None)
-        logger.warn('1--------------------------------')
-        logger.warn(casLoginRequestJudge)
-        logger.warn(casLogoutRequestJudge)
-        logger.warn('1--------------------------------')
 
         if casLoginRequestJudge is not None and casLoginRequestJudge(request):
             if request.user.is_authenticated:
-                logger.warn(request.user.is_authenticated)
                 return self.cas_successful_login(user=request.user, request=request)
             service_url = get_service_url(request, request.GET.get('next'))
             client = get_cas_client(service_url=service_url, request=request)
             ticket = request.GET.get('ticket')
             shortTicket = ''
+            historyTickets = SessionTicket.objects.filter(session_key=request.session.session_key)
+            if len(historyTickets) == 0
+                protocol = get_protocol(request)
+                host = request.get_host()
+                redirect_url = urllib_parse.urlunparse(
+                    (protocol, host, '', '', '', ''),
+                )
+                return HttpResponseRedirect(client.get_logout_url(redirect_url))
             if ticket:
                 shortTicket = ticket[0:30]
-            logger.warn('ticket')
-            # ticket 验证阶段
-            if ticket:
                 pgtiou = request.session.get("pgtiou")
                 logger.warn(ticket)
                 
@@ -101,17 +101,11 @@ class CASMiddleware(MiddlewareMixin):
                 # 如果登录成功
                 if user is not None:
                     # If this User has a nonce value, we need to bind into the session.
-                    logger.warn(user.get_username())
-                    logger.warn('------------user.session_nonce------------')
-                    logger.warn(user.session_nonce)
-                    logger.warn('-----------request.session.get------------')
-                    logger.warn(request.session.get("_nonce", ""))
                     if not request.session.exists(request.session.session_key):
                         request.session.create()
                     auth_login(request, user)
                     logger.warn('0----------------login success')
                     logger.warn(request.session.session_key)
-                    logger.warn(ticket)
                     SessionTicket.objects.create(
                         session_key=request.session.session_key,
                         ticket=shortTicket
