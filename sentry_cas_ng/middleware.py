@@ -64,15 +64,18 @@ class CASMiddleware(MiddlewareMixin):
         casLoginRequestJudge = getattr(settings, 'CAS_LOGIN_REQUEST_JUDGE', None)
         casLogoutRequestJudge = getattr(settings, 'CAS_LOGOUT_REQUEST_JUDGE', None)
         casProxyCallback = getattr(settings, 'CAS_PROXY_CALLBACK', None)
-
+        logger.warn('=============' + request.path + '===============')
         if casLoginRequestJudge is not None and casLoginRequestJudge(request):
+            logger.warn('=============login logic===============')
             if request.user.is_authenticated:
+                logger.warn('=============logined===============')
                 return self.cas_successful_login(user=request.user, request=request)
             service_url = get_service_url(request, request.GET.get('next'))
             client = get_cas_client(service_url=service_url, request=request)
             ticket = request.GET.get('ticket')
             shortTicket = ''
             if ticket:
+                logger.warn('=============ticket logic===============')
                 shortTicket = ticket[0:30]
                 pgtiou = request.session.get("pgtiou")
                 logger.warn(ticket)
@@ -83,6 +86,7 @@ class CASMiddleware(MiddlewareMixin):
                                 request=request)
                 # 如果登录成功
                 if user is not None:
+                    logger.warn('=============ticket logic===============')
                     # If this User has a nonce value, we need to bind into the session.
                     if not request.session.exists(request.session.session_key):
                         request.session.create()
@@ -113,12 +117,7 @@ class CASMiddleware(MiddlewareMixin):
                     return HttpResponseRedirect(client.get_login_url())
             elif len(SessionTicket.objects.filter(session_key=request.session.session_key)) == 0:
                 # 如果没有 ticket 那么曾主动退出登录或登录已经过期，跳转至 sso 重新登录
-                protocol = get_protocol(request)
-                host = request.get_host()
-                redirect_url = urllib_parse.urlunparse(
-                    (protocol, host, '', '', '', ''),
-                )
-                return HttpResponseRedirect(client.get_logout_url(redirect_url))
+                return HttpResponseRedirect(client.get_logout_url())
             else:
                 return HttpResponseRedirect(client.get_login_url())
         elif casLogoutRequestJudge is not None and casLogoutRequestJudge(request):
