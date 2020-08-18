@@ -19,7 +19,6 @@ from django.utils.translation import ugettext_lazy as _
 from .utils import (
     get_cas_client,
     get_protocol,
-    get_casLoginReturnUrl,
     get_service_url,
     get_user_from_session,
 )
