@@ -19,7 +19,7 @@ from django.utils.translation import ugettext_lazy as _
 from .utils import (
     get_cas_client,
     get_protocol,
-    get_redirect_url,
+    get_casLoginReturnUrl,
     get_service_url,
     get_user_from_session,
 )
@@ -64,14 +64,22 @@ class CASMiddleware(MiddlewareMixin):
         casLoginRequestJudge = getattr(settings, 'CAS_LOGIN_REQUEST_JUDGE', None)
         casLogoutRequestJudge = getattr(settings, 'CAS_LOGOUT_REQUEST_JUDGE', None)
         casProxyCallback = getattr(settings, 'CAS_PROXY_CALLBACK', None)
+        casLoginReturn = getattr(settings, 'CAS_LOGIN_RETURN', None)
         logger.warn('=============' + request.path + '===============')
         if casLoginRequestJudge is not None and casLoginRequestJudge(request):
             logger.warn('=============login logic===============')
+            protocol = get_protocol(request)
+            host = request.get_host()
+            port = request.get_port()
+            casLoginReturnUrl = urllib_parse.urlunparse(
+                (protocol, host + ':' + port, request.path, '', '', ''),
+            )
+            logger.warn('============= casLoginReturnUrl ===============')
             if request.user.is_authenticated:
                 logger.warn('=============logined===============')
                 return self.cas_successful_login(user=request.user, request=request)
             service_url = get_service_url(request, request.GET.get('next'))
-            client = get_cas_client(service_url=service_url, request=request)
+            client = get_cas_client(service_url=casLoginReturnUrl, request=request)
             ticket = request.GET.get('ticket')
             shortTicket = ''
             if ticket:
@@ -114,12 +122,12 @@ class CASMiddleware(MiddlewareMixin):
                             pass
                     return self.cas_successful_login(user=user, request=request)
                 else:
-                    return HttpResponseRedirect(client.get_login_url())
+                    return HttpResponseRedirect(client.get_login_url(casLoginReturnUrl))
             elif len(SessionTicket.objects.filter(session_key=request.session.session_key)) == 0:
                 # 如果没有 ticket 那么曾主动退出登录或登录已经过期，跳转至 sso 重新登录
-                return HttpResponseRedirect(client.get_logout_url())
+                return HttpResponseRedirect(client.get_logout_url(casLoginReturnUrl))
             else:
-                return HttpResponseRedirect(client.get_login_url())
+                return HttpResponseRedirect(client.get_login_url(casLoginReturnUrl))
         elif casLogoutRequestJudge is not None and casLogoutRequestJudge(request):
             self.cas_success_logout(request=request)
             pass
