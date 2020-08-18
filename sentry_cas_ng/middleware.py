@@ -47,7 +47,6 @@ def user_logout(sender, request, user, **kwargs):
         session=request.session,
         ticket=ticket,
     )
-    auth_logout(request)
     # clean current session ProxyGrantingTicket and SessionTicket
     ProxyGrantingTicket.objects.filter(session_key=request.session.session_key).delete()
     SessionTicket.objects.filter(session_key=request.session.session_key).delete()
