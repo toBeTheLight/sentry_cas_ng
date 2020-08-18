@@ -46,7 +46,7 @@ class CASMiddleware(MiddlewareMixin):
             logger.warn(request.user.session_nonce)
             logger.warn(request.session.get("_nonce", ""))
         except KeyError:
-            continue
+            logger.warn('state has error')
         logger.warn('1--------------------------------')
         
         if casLoginReg is not None and re.match(casLoginReg, request.path):
