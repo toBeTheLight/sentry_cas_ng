@@ -8,11 +8,12 @@ from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
+from django.contrib.auth.signals import user_logged_out
+from sentry_cas_ng.signals import cas_user_logout
 from django.urls import reverse
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.six.moves import urllib_parse
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.auth.signals import user_logged_out
 
 from .utils import (
     get_cas_client,
@@ -27,6 +28,26 @@ import logging
 logging.basicConfig()
 logger = logging.getLogger('sentry-cas')
 __all__ = ['CASMiddleware']
+
+@receiver(user_logged_out)
+def user_logout(sender, request, user, **kwargs):
+    try:
+        st = SessionTicket.objects.get(session_key=request.session.session_key)
+        ticket = st.ticket[0:30]
+    except SessionTicket.DoesNotExist:
+        ticket = None
+    # send logout signal
+    cas_user_logout.send(
+        sender="manual",
+        user=request.user,
+        session=request.session,
+        ticket=ticket,
+    )
+    auth_logout(request)
+    # clean current session ProxyGrantingTicket and SessionTicket
+    ProxyGrantingTicket.objects.filter(session_key=request.session.session_key).delete()
+    SessionTicket.objects.filter(session_key=request.session.session_key).delete()
+
 
 class CASMiddleware(MiddlewareMixin):
     """Middleware that allows CAS authentication on admin pages"""
