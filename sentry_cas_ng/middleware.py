@@ -72,15 +72,6 @@ class CASMiddleware(MiddlewareMixin):
             client = get_cas_client(service_url=service_url, request=request)
             ticket = request.GET.get('ticket')
             shortTicket = ''
-            historyTickets = SessionTicket.objects.filter(session_key=request.session.session_key)
-            # 如果没有 ticket 那么曾主动退出登录或登录已经过期，跳转至 sso 重新登录
-            if len(historyTickets) == 0 and not ticket:
-                protocol = get_protocol(request)
-                host = request.get_host()
-                redirect_url = urllib_parse.urlunparse(
-                    (protocol, host, '', '', '', ''),
-                )
-                return HttpResponseRedirect(client.get_logout_url(redirect_url))
             if ticket:
                 shortTicket = ticket[0:30]
                 pgtiou = request.session.get("pgtiou")
@@ -120,6 +111,14 @@ class CASMiddleware(MiddlewareMixin):
                     return self.cas_successful_login(user=user, request=request)
                 else:
                     return HttpResponseRedirect(client.get_login_url())
+            elif len(SessionTicket.objects.filter(session_key=request.session.session_key)) == 0:
+                # 如果没有 ticket 那么曾主动退出登录或登录已经过期，跳转至 sso 重新登录
+                protocol = get_protocol(request)
+                host = request.get_host()
+                redirect_url = urllib_parse.urlunparse(
+                    (protocol, host, '', '', '', ''),
+                )
+                return HttpResponseRedirect(client.get_logout_url(redirect_url))
             else:
                 return HttpResponseRedirect(client.get_login_url())
         elif casLogoutRequestJudge is not None and casLogoutRequestJudge(request):
