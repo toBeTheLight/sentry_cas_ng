@@ -42,11 +42,8 @@ class CASMiddleware(MiddlewareMixin):
         casProxyCallback = getattr(settings, 'CAS_PROXY_CALLBACK', None)
         logger.warn('1--------------------------------')
         logger.warn(request.path)
-        try:
-            logger.warn(request.user.session_nonce)
-            logger.warn(request.session.get("_nonce", ""))
-        except KeyError:
-            logger.warn('state has error')
+        logger.warn(getattr(request.user, 'session_nonce', ''))
+        logger.warn(request.session.get("_nonce", ""))
         logger.warn('1--------------------------------')
         
         if casLoginReg is not None and re.match(casLoginReg, request.path):
