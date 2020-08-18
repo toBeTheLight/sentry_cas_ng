@@ -30,31 +30,6 @@ logging.basicConfig()
 logger = logging.getLogger('sentry-cas')
 __all__ = ['CASMiddleware']
 
-@receiver(user_logged_out)
-def user_logout(sender, request, user, **kwargs):
-    logger.warn('----------logout----------')
-    try:
-        sts = SessionTicket.objects.filter(session_key=request.session.session_key)
-        st = sts[0]
-        ticket = st.ticket[0:30]
-    except SessionTicket.DoesNotExist:
-        ticket = None
-    logger.warn(ticket)
-    logger.warn(request.session)
-    # send logout signal
-    cas_user_logout.send(
-        sender="manual",
-        user=request.user,
-        session=request.session,
-        ticket=ticket,
-    )
-    # clean current session ProxyGrantingTicket and SessionTicket
-    ProxyGrantingTicket.objects.filter(session_key=request.session.session_key).delete()
-    SessionTicket.objects.filter(session_key=request.session.session_key).delete()
-    if st:
-        request.session['is_cas_logout'] = True
-
-
 class CASMiddleware(MiddlewareMixin):
     """Middleware that allows CAS authentication on admin pages"""
     def cas_successful_login(self, user, request):
@@ -63,23 +38,40 @@ class CASMiddleware(MiddlewareMixin):
         casLoginSuccessPath = getattr(settings, 'CAS_LOGIN_SUCCESS_PATH', '/')
         return HttpResponseRedirect(casLoginSuccessPath)
 
-    def process_request(self, request):
-        # 已经登录则放过
-        # cas 时进入 cas 登录逻辑
-        logger.warn('--------------is cas logout-----------------')
-        logger.warn(request.session.get('is_cas_logout', False))
-        if request.session.get('is_cas_logout', False):
-            request.session['is_cas_logout'] = False
-            client = get_cas_client(service_url=service_url, request=request)
+    def cas_success_logout(self, request):
+        logger.warn('----------logout----------')
+        try:
+            sts = SessionTicket.objects.filter(session_key=request.session.session_key)
+            st = sts[0]
+            ticket = st.ticket[0:30]
+        except SessionTicket.DoesNotExist:
+            ticket = None
+        logger.warn(ticket)
+        # send logout signal
+        cas_user_logout.send(
+            sender="manual",
+            user=request.user,
+            session=request.session,
+            ticket=ticket,
+        )
+        # clean current session ProxyGrantingTicket and SessionTicket
+        ProxyGrantingTicket.objects.filter(session_key=request.session.session_key).delete()
+        SessionTicket.objects.filter(session_key=request.session.session_key).delete()
+        if st:
             protocol = get_protocol(request)
             host = request.get_host()
             redirect_url = urllib_parse.urlunparse(
-                (protocol, host, next_page, '', '', ''),
+                (protocol, host, '', '', '', ''),
             )
             client = get_cas_client(request=request)
-            return HttpResponseRedirect(client.get_logout_url(redirect_url))
-        casLoginReg = getattr(settings, 'CAS_LOGIN_REG', None)
-        casLogoutReg = getattr(settings, 'CAS_LOGOUT_REG', None)
+            return client.get_logout_url(redirect_url)
+        return False
+
+    def process_request(self, request):
+        # 已经登录则放过
+        # cas 时进入 cas 登录逻辑
+        casLoginRequestJudge = getattr(settings, 'CAS_LOGIN_REQUEST_JUDGE', None)
+        casLogoutRequestJudge = getattr(settings, 'CAS_LOGOUT_REQUEST_JUDGE', None)
         casProxyCallback = getattr(settings, 'CAS_PROXY_CALLBACK', None)
         logger.warn('1--------------------------------')
         logger.warn(request.path)
@@ -87,7 +79,7 @@ class CASMiddleware(MiddlewareMixin):
         logger.warn(request.session.get("_nonce", ""))
         logger.warn('1--------------------------------')
         
-        if casLoginReg is not None and re.match(casLoginReg, request.path):
+        if casLoginRequestJudge is not None and casLoginRequestJudge(request):
             logger.warn('2--------------------------------')
             logger.warn(request.user)
             logger.warn(request.user.is_authenticated)
@@ -149,24 +141,28 @@ class CASMiddleware(MiddlewareMixin):
                     return HttpResponseRedirect(client.get_login_url())
             else:
                 return HttpResponseRedirect(client.get_login_url())
-        elif casLogoutReg is not None and re.match(casLogoutReg, request.path):
-            try:
-                st = SessionTicket.objects.get(session_key=request.session.session_key)
-                ticket = st.ticket
-            except SessionTicket.DoesNotExist:
-                ticket = None
-            # send logout signal
-            cas_user_logout.send(
-                sender="manual",
-                user=request.user,
-                session=request.session,
-                ticket=shortTicket,
-            )
-            auth_logout(request)
-            # clean current session ProxyGrantingTicket and SessionTicket
-            ProxyGrantingTicket.objects.filter(session_key=request.session.session_key).delete()
-            SessionTicket.objects.filter(session_key=request.session.session_key).delete()
+        elif casLogoutRequestJudge is not None and casLogoutRequestJudge(request):
+            casLogoutUrl = self.cas_success_logout(request=request)
+            if casLogoutUrl:
+                return HttpResponseRedirect(casLogoutUrl)
             pass
+            # try:
+            #     st = SessionTicket.objects.get(session_key=request.session.session_key)
+            #     ticket = st.ticket
+            # except SessionTicket.DoesNotExist:
+            #     ticket = None
+            # # send logout signal
+            # cas_user_logout.send(
+            #     sender="manual",
+            #     user=request.user,
+            #     session=request.session,
+            #     ticket=shortTicket,
+            # )
+            # auth_logout(request)
+            # # clean current session ProxyGrantingTicket and SessionTicket
+            # ProxyGrantingTicket.objects.filter(session_key=request.session.session_key).delete()
+            # SessionTicket.objects.filter(session_key=request.session.session_key).delete()
+            # pass
         else:
             pass
         """Checks that the authentication middleware is installed"""
