@@ -51,6 +51,8 @@ def user_logout(sender, request, user, **kwargs):
     # clean current session ProxyGrantingTicket and SessionTicket
     ProxyGrantingTicket.objects.filter(session_key=request.session.session_key).delete()
     SessionTicket.objects.filter(session_key=request.session.session_key).delete()
+    if st:
+        request.session['is_cas_logout'] = True
 
 
 class CASMiddleware(MiddlewareMixin):
@@ -64,6 +66,18 @@ class CASMiddleware(MiddlewareMixin):
     def process_request(self, request):
         # 已经登录则放过
         # cas 时进入 cas 登录逻辑
+        logger.warn('--------------is cas logout-----------------')
+        logger.warn(request.session.get('is_cas_logout', False))
+        if request.session.get('is_cas_logout', False):
+            request.session['is_cas_logout'] = False
+            client = get_cas_client(service_url=service_url, request=request)
+            protocol = get_protocol(request)
+            host = request.get_host()
+            redirect_url = urllib_parse.urlunparse(
+                (protocol, host, next_page, '', '', ''),
+            )
+            client = get_cas_client(request=request)
+            return HttpResponseRedirect(client.get_logout_url(redirect_url))
         casLoginReg = getattr(settings, 'CAS_LOGIN_REG', None)
         casLogoutReg = getattr(settings, 'CAS_LOGOUT_REG', None)
         casProxyCallback = getattr(settings, 'CAS_PROXY_CALLBACK', None)
