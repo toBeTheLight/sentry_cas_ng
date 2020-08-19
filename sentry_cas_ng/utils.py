@@ -98,14 +98,8 @@ def get_cas_client(service_url=None, request=None):
 def get_user_from_session(session):
     try:
         user_id = session[SESSION_KEY]
-        logger.warn('!!!!!!!!!!!!!!!!!!!!!!!')
-        logger.warn(user_id)
         backend_path = session[BACKEND_SESSION_KEY]
-        logger.warn('!!!!!!!!!!!!!!!!!!!!!!!')
-        logger.warn(backend_path)
-        logger.warn('!!!!!!!!!!!!!!!!!!!!!!!')
         backend = load_backend(backend_path)
-        logger.warn(backend_path)
         return backend.get_user(user_id) or AnonymousUser()
     except KeyError:
         return AnonymousUser()

@@ -38,9 +38,9 @@ class CASBackend(ModelBackend):
 
         client = get_cas_client(service_url=service, request=request)
         username, attributes, pgtiou = client.verify_ticket(ticket)
-        logger.warn('------------------------')
-        logger.warn(username)
-        logger.warn('------------------------')
+        logger.debug('------------------------')
+        logger.debug(username)
+        logger.debug('------------------------')
         if attributes and request:
             request.session['attributes'] = attributes
 
@@ -50,7 +50,7 @@ class CASBackend(ModelBackend):
         username = self.clean_username(username)
 
         if attributes:
-            logger.warn('---------attributes---------')
+            logger.debug('---------attributes---------')
             reject = self.bad_attributes_reject(request, username, attributes)
             if reject:
                 return None
@@ -75,9 +75,9 @@ class CASBackend(ModelBackend):
                 user_kwargs['id'] = self.get_user_id(attributes)
 
             user, created = UserModel._default_manager.get_or_create(**user_kwargs)
-            logger.warn('---------casCreateUser---------')
-            logger.warn(created)
-            logger.warn(user)
+            logger.debug('---------casCreateUser---------')
+            logger.debug(created)
+            logger.debug(user)
 
             if created:
                 user = self.configure_user(user)

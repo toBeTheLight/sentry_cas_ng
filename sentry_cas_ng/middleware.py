@@ -39,8 +39,10 @@ class CASMiddleware(MiddlewareMixin):
 
     def cas_success_logout(self, request):
         logger.warn('----------logout----------')
+        sts = SessionTicket.objects.filter(session_key=request.session.session_key)
+        if len(sts) == 0:
+            return
         try:
-            sts = SessionTicket.objects.filter(session_key=request.session.session_key)
             st = sts[0]
             ticket = st.ticket[0:30]
         except SessionTicket.DoesNotExist:
