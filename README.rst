@@ -1,4 +1,4 @@
-This packages
+This package
 =============
 
 Most code are copied from Django CAS NG. https://github.com/django-cas-ng/django-cas-ng.
