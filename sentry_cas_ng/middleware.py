@@ -97,7 +97,7 @@ class CASMiddleware(MiddlewareMixin):
                     if not request.session.exists(request.session.session_key):
                         request.session.create()
                     auth_login(request, user)
-                    logger.warn('0----------------login success')
+                    logger.warn('=============login success===============')
                     logger.warn(request.session.session_key)
                     SessionTicket.objects.create(
                         session_key=request.session.session_key,
@@ -118,13 +118,17 @@ class CASMiddleware(MiddlewareMixin):
                             pgt.save()
                         except ProxyGrantingTicket.DoesNotExist:
                             pass
+                    logger.warn('=============redirect login success===============')
                     return self.cas_successful_login(user=user, request=request)
                 else:
+                    logger.warn('=============redirect login===============')
                     return HttpResponseRedirect(client.get_login_url(casLoginReturnUrl))
             elif len(SessionTicket.objects.filter(session_key=request.session.session_key)) == 0:
                 # 如果没有 ticket 那么曾主动退出登录或登录已经过期，跳转至 sso 重新登录
+                logger.warn('=============redirect logout===============')
                 return HttpResponseRedirect(client.get_logout_url(casLoginReturnUrl))
             else:
+                logger.warn('=============redirect login unknow===============')
                 return HttpResponseRedirect(client.get_login_url(casLoginReturnUrl))
         elif casLogoutRequestJudge is not None and casLogoutRequestJudge(request):
             self.cas_success_logout(request=request)
