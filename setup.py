@@ -45,7 +45,7 @@ setup(
     url='https://github.com/mingchen/django-cas-ng',
     #bugtrack_url='https://github.com/mingchen/django-cas-ng/issues',  # not support this key
     download_url ='https://github.com/mingchen/django-cas-ng/releases',
-    version='3.6.0',
+    version='0.1.0',
     python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
     install_requires=[
         'Django>=1.11',
