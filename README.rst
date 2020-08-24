@@ -1,3 +1,63 @@
+This package
+=============
+
+Most code are copied from Django CAS NG. https://github.com/django-cas-ng/django-cas-ng.
+
+Some code are copied are from https://github.com/Banno/getsentry-ldap-auth.
+
+Some code are writen by me.
+
+I know nothing about Python, but this works on Sentry 20.6.0 On-Premise which is based on getsentry/sentry:b0907fab9cf297536b1f0d9789262b845c2d748c.
+
+If it doesn't work, I don’t know what to do.
+
+it Works by a middleware which can judge whether the request is a cas login by function named CAS_LOGIN_REQUEST_JUDGE in setting.py and try to login by cas,
+it also judge whether the request is a logout by function named CAS_LOGOUT_REQUEST_JUDGE in setting.py and try to delete the session of current cas ticket.
+By the way, i can't make sure that behavior after logout is exactly as expected.
+
+
+Install with `pip`_::
+
+    pip install git+https://github.com/toBeTheLight/sentry_cas_ng.git
+
+
+
+Some config in sentry.conf.py
+
+..  code-block:: python
+
+    # session_key of sentry are too loooooooooong
+    SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
+    INSTALLED_APPS = INSTALLED_APPS + (
+        'sentry_cas_ng',
+    )
+    MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
+        'sentry_cas_ng.middleware.CASMiddleware',
+    )
+    AUTHENTICATION_BACKENDS = (
+        'sentry_cas_ng.backends.CASBackend',
+    ) + AUTHENTICATION_BACKENDS
+
+    CAS_SERVER_URL = 'https://xxxxxxxxxxx/cas/'
+    CAS_VERSION = '3'
+
+    def CAS_LOGIN_REQUEST_JUDGE(request):
+      import re
+      pathReg = r'.*/auth/login/.*'
+      return not request.GET.get('admin', None) and re.match(pathReg, request.path) is not None
+
+    def CAS_LOGOUT_REQUEST_JUDGE(request):
+      import re
+      pathReg = r'.*/api/0/auth/.*'
+      return re.match(pathReg, request.path) is not None and request.method == 'DELETE'
+
+    CAS_APPLY_ATTRIBUTES_TO_USER = True
+    AUTH_CAS_DEFAULT_SENTRY_ORGANIZATION = 'xxx'
+    AUTH_CAS_SENTRY_ORGANIZATION_ROLE_TYPE = 'xxx'
+    AUTH_CAS_DEFAULT_EMAIL_DOMAIN = '@xxx.com'
+
+
 Django CAS NG
 =============
 
