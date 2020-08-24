@@ -124,14 +124,14 @@ class CASMiddleware(MiddlewareMixin):
                     return self.cas_successful_login(user=user, request=request)
                 else:
                     logger.debug('=============redirect login===============')
-                    return HttpResponseRedirect(client.get_login_url(casLoginReturnUrl))
-            elif len(SessionTicket.objects.filter(session_key=request.session.session_key)) == 0:
-                # 如果没有 ticket 那么曾主动退出登录或登录已经过期，跳转至 sso 重新登录
-                logger.debug('=============redirect logout===============')
-                return HttpResponseRedirect(client.get_login_url(casLoginReturnUrl))
+                    return HttpResponseRedirect(client.get_login_url())
+            # elif len(SessionTicket.objects.filter(session_key=request.session.session_key)) == 0:
+            #     # 如果没有 ticket 那么曾主动退出登录或登录已经过期，跳转至 sso 重新登录
+            #     logger.debug('=============redirect logout===============')
+            #     return HttpResponseRedirect(client.get_login_url())
             else:
                 logger.debug('=============redirect login unknow===============')
-                return HttpResponseRedirect(client.get_login_url(casLoginReturnUrl))
+                return HttpResponseRedirect(client.get_login_url())
         elif casLogoutRequestJudge is not None and casLogoutRequestJudge(request):
             self.cas_success_logout(request=request)
             pass
