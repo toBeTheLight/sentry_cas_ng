@@ -38,7 +38,7 @@ class CASMiddleware(MiddlewareMixin):
         return HttpResponseRedirect(casLoginSuccessPath)
 
     def cas_success_logout(self, request):
-        logger.warn('----------logout----------')
+        logger.warn('=============logout==============')
         sts = SessionTicket.objects.filter(session_key=request.session.session_key)
         if len(sts) == 0:
             return
@@ -47,6 +47,7 @@ class CASMiddleware(MiddlewareMixin):
             ticket = st.ticket[0:30]
         except SessionTicket.DoesNotExist:
             ticket = None
+        logger.warn(request.session.session_key)
         logger.warn(ticket)
         # send logout signal
         cas_user_logout.send(
@@ -73,6 +74,8 @@ class CASMiddleware(MiddlewareMixin):
         logger.warn('=============' + request.path + '===============')
         if casLoginRequestJudge is not None and casLoginRequestJudge(request):
             logger.warn('=============login logic===============')
+            logger.warn('=============session_key===============')
+            logger.warn(request.session.session_key)
             protocol = get_protocol(request)
             host = request.get_host()
             casLoginReturnUrl = urllib_parse.urlunparse(
