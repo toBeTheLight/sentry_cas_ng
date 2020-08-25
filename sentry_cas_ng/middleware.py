@@ -58,6 +58,10 @@ class CASMiddleware(MiddlewareMixin):
         # clean current session ProxyGrantingTicket and SessionTicket
         ProxyGrantingTicket.objects.filter(session_key=request.session.session_key).delete()
         SessionTicket.objects.filter(session_key=request.session.session_key).delete()
+        SessionTicket.objects.create(
+            session_key=request.session.session_key,
+            ticket='deleted'
+        )
 
     def process_request(self, request):
         # 已经登录则放过
@@ -125,11 +129,10 @@ class CASMiddleware(MiddlewareMixin):
                 else:
                     logger.debug('=============redirect login===============')
                     return HttpResponseRedirect(client.get_login_url())
-            elif len(SessionTicket.objects.filter(session_key=request.session.session_key)) == 0:
-                # 如果没有 ticket 那么曾主动退出登录或登录已经过期，跳转至 sso 重新登录
-                logger.debug('=============redirect logout===============')
-                return HttpResponseRedirect(client.get_logout_url(casLoginReturnUrl))
             else:
+                st = SessionTicket.objects.get(session_key=request.session.session_key)
+                if st is not None and st.ticket is 'deleted':
+                    return HttpResponseRedirect(client.get_logout_url(casLoginReturnUrl))
                 logger.debug('=============redirect login unknow===============')
                 return HttpResponseRedirect(client.get_login_url())
         elif casLogoutRequestJudge is not None and casLogoutRequestJudge(request):
