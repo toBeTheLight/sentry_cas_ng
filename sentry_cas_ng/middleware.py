@@ -130,7 +130,10 @@ class CASMiddleware(MiddlewareMixin):
                     logger.debug('=============redirect login===============')
                     return HttpResponseRedirect(client.get_login_url())
             else:
-                st = SessionTicket.objects.get(session_key=request.session.session_key)
+                try:
+                    st = SessionTicket.objects.get(session_key=request.session.session_key)
+                except SessionTicket.DoesNotExist:
+                    st = None
                 if st is not None and st.ticket is 'deleted':
                     SessionTicket.objects.filter(session_key=request.session.session_key).delete()
                     return HttpResponseRedirect(client.get_logout_url(casLoginReturnUrl))
