@@ -129,9 +129,9 @@ class CASMiddleware(MiddlewareMixin):
                     logger.warn('=============redirect login===============')
                     return HttpResponseRedirect(client.get_login_url())
             else:
-                hasLogout = request.COOKIES.get('sentry_cas_logout')
+                hasLogout = request.COOKIES.get('sentry_cas_logout', '')
                 logger.warn('========= hasLogout ====' + hasLogout + '===============')
-                if hasLogout is 'true':
+                if hasLogout == 'true':
                     return HttpResponseRedirect(client.get_logout_url(casLoginReturnUrl))
                 logger.warn('=============redirect login unknow===============')
                 return HttpResponseRedirect(client.get_login_url())
