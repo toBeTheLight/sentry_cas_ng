@@ -64,7 +64,7 @@ class CASMiddleware(MiddlewareMixin):
             ticket='deleted'
         )
 
-    def process_request(self, request):
+    def process_response(self, request):
         # 已经登录则放过
         # cas 时进入 cas 登录逻辑
         casLoginRequestJudge = getattr(settings, 'CAS_LOGIN_REQUEST_JUDGE', None)
@@ -172,6 +172,6 @@ class CASMiddleware(MiddlewareMixin):
                  "setting to insert 'django.contrib.auth.middleware."
                  "AuthenticationMiddleware'.")
         assert hasattr(request, 'user'), error
-
+    def process_
     def process_view(self, request, view_func, view_args, view_kwargs):
         pass
