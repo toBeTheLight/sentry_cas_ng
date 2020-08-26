@@ -158,8 +158,8 @@ class CASMiddleware(MiddlewareMixin):
             # pass
         else:
             pass
+    def process_request(self, request):
         """Checks that the authentication middleware is installed"""
-
         error = ("The Django CAS middleware requires authentication "
                  "middleware to be installed. Edit your MIDDLEWARE_CLASSES "
                  "setting to insert 'django.contrib.auth.middleware."
