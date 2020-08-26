@@ -122,7 +122,7 @@ class CASMiddleware(MiddlewareMixin):
                             pgt.session_key = request.session.session_key
                             pgt.save()
                         except ProxyGrantingTicket.DoesNotExist:
-                            pass
+                            return response
                     logger.warn('=============redirect login success===============')
                     return self.cas_successful_login(user=user, request=request)
                 else:
@@ -138,7 +138,7 @@ class CASMiddleware(MiddlewareMixin):
         elif casLogoutRequestJudge is not None and casLogoutRequestJudge(request):
             self.cas_success_logout(request=request)
             response.set_cookie('sentry_cas_logout', 'true', max_age=5)
-            pass
+            return response
             # try:
             #     st = SessionTicket.objects.get(session_key=request.session.session_key)
             #     ticket = st.ticket
@@ -157,7 +157,7 @@ class CASMiddleware(MiddlewareMixin):
             # SessionTicket.objects.filter(session_key=request.session.session_key).delete()
             # pass
         else:
-            pass
+            return response
     def process_request(self, request):
         """Checks that the authentication middleware is installed"""
         error = ("The Django CAS middleware requires authentication "
