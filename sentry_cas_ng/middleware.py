@@ -59,10 +59,6 @@ class CASMiddleware(MiddlewareMixin):
         # clean current session ProxyGrantingTicket and SessionTicket
         ProxyGrantingTicket.objects.filter(session_key=request.session.session_key).delete()
         SessionTicket.objects.filter(session_key=request.session.session_key).delete()
-        SessionTicket.objects.create(
-            session_key=request.session.session_key,
-            ticket='deleted'
-        )
 
     def process_response(self, request, response):
         # 已经登录则放过
@@ -126,26 +122,23 @@ class CASMiddleware(MiddlewareMixin):
                             pgt.session_key = request.session.session_key
                             pgt.save()
                         except ProxyGrantingTicket.DoesNotExist:
-                            return response
+                            pass
                     logger.warn('=============redirect login success===============')
                     return self.cas_successful_login(user=user, request=request)
                 else:
                     logger.warn('=============redirect login===============')
                     return HttpResponseRedirect(client.get_login_url())
             else:
-                try:
-                    st = SessionTicket.objects.get(session_key=request.session.session_key)
-                except SessionTicket.DoesNotExist:
-                    st = None
-                logger.warn('========= ticket ====' + st.ticket + '===============')
-                if st is not None and st.ticket is 'deleted':
-                    SessionTicket.objects.filter(session_key=request.session.session_key).delete()
+                hasLogout = request.COOKIES.get('sentry_cas_logout')
+                logger.warn('========= hasLogout ====' + hasLogout + '===============')
+                if hasLogout is 'true':
                     return HttpResponseRedirect(client.get_logout_url(casLoginReturnUrl))
                 logger.warn('=============redirect login unknow===============')
                 return HttpResponseRedirect(client.get_login_url())
         elif casLogoutRequestJudge is not None and casLogoutRequestJudge(request):
             self.cas_success_logout(request=request)
-            return response
+            response.set_cookie('sentry_cas_logout', 'true', max_age=5)
+            pass
             # try:
             #     st = SessionTicket.objects.get(session_key=request.session.session_key)
             #     ticket = st.ticket
@@ -164,7 +157,7 @@ class CASMiddleware(MiddlewareMixin):
             # SessionTicket.objects.filter(session_key=request.session.session_key).delete()
             # pass
         else:
-            return response
+            pass
         """Checks that the authentication middleware is installed"""
 
         error = ("The Django CAS middleware requires authentication "
