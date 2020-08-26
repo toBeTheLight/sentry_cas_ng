@@ -64,7 +64,7 @@ class CASMiddleware(MiddlewareMixin):
             ticket='deleted'
         )
 
-    def process_response(self, request):
+    def process_response(self, request, response):
         # 已经登录则放过
         # cas 时进入 cas 登录逻辑
         casLoginRequestJudge = getattr(settings, 'CAS_LOGIN_REQUEST_JUDGE', None)
@@ -126,7 +126,7 @@ class CASMiddleware(MiddlewareMixin):
                             pgt.session_key = request.session.session_key
                             pgt.save()
                         except ProxyGrantingTicket.DoesNotExist:
-                            pass
+                            return response
                     logger.warn('=============redirect login success===============')
                     return self.cas_successful_login(user=user, request=request)
                 else:
@@ -145,7 +145,7 @@ class CASMiddleware(MiddlewareMixin):
                 return HttpResponseRedirect(client.get_login_url())
         elif casLogoutRequestJudge is not None and casLogoutRequestJudge(request):
             self.cas_success_logout(request=request)
-            pass
+            return response
             # try:
             #     st = SessionTicket.objects.get(session_key=request.session.session_key)
             #     ticket = st.ticket
@@ -164,7 +164,7 @@ class CASMiddleware(MiddlewareMixin):
             # SessionTicket.objects.filter(session_key=request.session.session_key).delete()
             # pass
         else:
-            pass
+            return response
         """Checks that the authentication middleware is installed"""
 
         error = ("The Django CAS middleware requires authentication "
@@ -172,6 +172,5 @@ class CASMiddleware(MiddlewareMixin):
                  "setting to insert 'django.contrib.auth.middleware."
                  "AuthenticationMiddleware'.")
         assert hasattr(request, 'user'), error
-    def process_
     def process_view(self, request, view_func, view_args, view_kwargs):
         pass
