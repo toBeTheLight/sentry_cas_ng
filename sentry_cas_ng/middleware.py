@@ -38,7 +38,7 @@ class CASMiddleware(MiddlewareMixin):
         return HttpResponseRedirect(casLoginSuccessPath)
 
     def cas_success_logout(self, request):
-        logger.warn('=============logout==============')
+        logger.debug('=============logout==============')
         sts = SessionTicket.objects.filter(session_key=request.session.session_key)
         if len(sts) == 0:
             return
@@ -47,8 +47,6 @@ class CASMiddleware(MiddlewareMixin):
             ticket = st.ticket[0:30]
         except SessionTicket.DoesNotExist:
             ticket = None
-        logger.warn(request.session.session_key)
-        logger.warn(ticket)
         # send logout signal
         cas_user_logout.send(
             sender="manual",
@@ -67,29 +65,28 @@ class CASMiddleware(MiddlewareMixin):
         casLogoutRequestJudge = getattr(settings, 'CAS_LOGOUT_REQUEST_JUDGE', None)
         casProxyCallback = getattr(settings, 'CAS_PROXY_CALLBACK', None)
         casLoginReturn = getattr(settings, 'CAS_LOGIN_RETURN', None)
-        logger.warn('=============' + request.path + '===============')
         if casLoginRequestJudge is not None and casLoginRequestJudge(request):
-            logger.warn('=============login logic===============')
-            logger.warn('=============session_key===============')
-            logger.warn(request.session.session_key)
+            logger.debug('=============login logic===============')
+            logger.debug('=============session_key===============')
+            logger.debug(request.session.session_key)
             protocol = get_protocol(request)
             host = request.get_host()
             casLoginReturnUrl = urllib_parse.urlunparse(
                 (protocol, host, request.path, '', '', ''),
             )
-            logger.warn('============= casLoginReturnUrl ===============')
+            logger.debug('============= casLoginReturnUrl ===============')
             if request.user.is_authenticated:
-                logger.warn('=============logined===============')
+                logger.debug('=============logined===============')
                 return self.cas_successful_login(user=request.user, request=request)
             service_url = get_service_url(request, request.GET.get('next'))
             client = get_cas_client(service_url=casLoginReturnUrl, request=request)
             ticket = request.GET.get('ticket')
             shortTicket = ''
             if ticket:
-                logger.warn('=============ticket logic===============')
+                logger.debug('=============ticket logic===============')
                 shortTicket = ticket[0:30]
                 pgtiou = request.session.get("pgtiou")
-                logger.warn(ticket)
+                logger.debug(ticket)
                 
                 user = authenticate(ticket=ticket,
                                 shortTicket=shortTicket,
@@ -97,13 +94,13 @@ class CASMiddleware(MiddlewareMixin):
                                 request=request)
                 # 如果登录成功
                 if user is not None:
-                    logger.warn('=============ticket logic===============')
+                    logger.debug('=============ticket logic===============')
                     # If this User has a nonce value, we need to bind into the session.
                     if not request.session.exists(request.session.session_key):
                         request.session.create()
                     auth_login(request, user)
-                    logger.warn('=============login success===============')
-                    logger.warn(request.session.session_key)
+                    logger.debug('=============login success===============')
+                    logger.debug(request.session.session_key)
                     SessionTicket.objects.create(
                         session_key=request.session.session_key,
                         ticket=shortTicket
@@ -123,17 +120,17 @@ class CASMiddleware(MiddlewareMixin):
                             pgt.save()
                         except ProxyGrantingTicket.DoesNotExist:
                             return response
-                    logger.warn('=============redirect login success===============')
+                    logger.debug('=============redirect login success===============')
                     return self.cas_successful_login(user=user, request=request)
                 else:
-                    logger.warn('=============redirect login===============')
+                    logger.debug('=============redirect login===============')
                     return HttpResponseRedirect(client.get_login_url())
             else:
                 hasLogout = request.COOKIES.get('sentry_cas_logout', '')
-                logger.warn('========= hasLogout ====' + hasLogout + '===============')
+                logger.debug('========= hasLogout ====' + hasLogout + '===============')
                 if hasLogout == 'true':
                     return HttpResponseRedirect(client.get_logout_url(casLoginReturnUrl))
-                logger.warn('=============redirect login unknow===============')
+                logger.debug('=============redirect login unknow===============')
                 return HttpResponseRedirect(client.get_login_url())
         elif casLogoutRequestJudge is not None and casLogoutRequestJudge(request):
             self.cas_success_logout(request=request)

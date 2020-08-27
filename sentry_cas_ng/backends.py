@@ -38,9 +38,6 @@ class CASBackend(ModelBackend):
 
         client = get_cas_client(service_url=service, request=request)
         username, attributes, pgtiou = client.verify_ticket(ticket)
-        logger.debug('------------------------')
-        logger.debug(username)
-        logger.debug('------------------------')
         if attributes and request:
             request.session['attributes'] = attributes
 
