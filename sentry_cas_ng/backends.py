@@ -123,13 +123,14 @@ class CASBackend(ModelBackend):
             except ImportError:
                 pass
             else:
+                log.warn("======user.email======" + user.email + "========")
                 if user.email is not None:
                     email = user.email
                 elif not hasattr(settings, 'AUTH_CAS_DEFAULT_EMAIL_DOMAIN'):
                     email = ''
                 elif authCasDefaultEmailDomain is not None:
                     email = username + '@' + authCasDefaultEmailDomain
-
+                log.warn("======email======" + email + "========")
                 # django-auth-ldap may have accidentally created an empty email address
                 UserEmail.objects.filter(Q(email='') | Q(email=' '), user=user).delete()
                 if email:
