@@ -124,17 +124,15 @@ class CASBackend(ModelBackend):
                 pass
             else:
                 email = ''
-                logger.warn("======user.email======" + user.email + "========")
-                logger.warn(user)
-                if user.email is not None:
+                if user.email:
                     email = user.email
                 elif authCasDefaultEmailDomain is not None:
                     email = username + '@' + authCasDefaultEmailDomain
-                logger.warn("======email======" + email + "========")
                 # django-auth-ldap may have accidentally created an empty email address
                 UserEmail.objects.filter(Q(email='') | Q(email=' '), user=user).delete()
                 if email:
                     UserEmail.objects.get_or_create(user=user, email=email)
+                logger.warn("======email====== " + email + " ========")
             # 组织与角色权限
             if authCasDefaultSentryOrganization:
                 orgs = OrganizationMember.objects.filter(user=user)
