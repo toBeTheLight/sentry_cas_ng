@@ -123,11 +123,11 @@ class CASBackend(ModelBackend):
             except ImportError:
                 pass
             else:
+                email = ''
                 logger.warn("======user.email======" + user.email + "========")
+                logger.warn(user)
                 if user.email is not None:
                     email = user.email
-                elif not hasattr(settings, 'AUTH_CAS_DEFAULT_EMAIL_DOMAIN'):
-                    email = ''
                 elif authCasDefaultEmailDomain is not None:
                     email = username + '@' + authCasDefaultEmailDomain
                 logger.warn("======email======" + email + "========")
