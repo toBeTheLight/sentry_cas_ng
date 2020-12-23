@@ -1,11 +1,11 @@
 This package
 =============
 
-Most code are copied from Django CAS NG. https://github.com/django-cas-ng/django-cas-ng.
+Most code is copied from Django CAS NG. https://github.com/django-cas-ng/django-cas-ng.
 
-Some code are copied from https://github.com/Banno/getsentry-ldap-auth.
+Some code is copied from https://github.com/Banno/getsentry-ldap-auth.
 
-Some code are writen by me.
+Some code is writen by me.
 
 I know nothing about Python, but this works on Sentry 20.6.0 On-Premise which is based on getsentry/sentry:b0907fab9cf297536b1f0d9789262b845c2d748c.
 
