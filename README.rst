@@ -3,7 +3,7 @@ This package
 
 Most code are copied from Django CAS NG. https://github.com/django-cas-ng/django-cas-ng.
 
-Some code are copied are from https://github.com/Banno/getsentry-ldap-auth.
+Some code are copied from https://github.com/Banno/getsentry-ldap-auth.
 
 Some code are writen by me.
 
